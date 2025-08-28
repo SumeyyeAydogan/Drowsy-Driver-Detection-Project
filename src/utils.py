@@ -16,6 +16,86 @@ def create_run_directories(run_name="run_001"):
     print(f"📁 Created run directories: {run_dir}")
     return run_dir
 
+def plot_dataset_distribution(data_dir="data", save_path=None):
+    """Plot distribution of drowsy vs notdrowsy in train/val/test datasets"""
+    import glob
+    
+    datasets = ['train', 'val', 'test']
+    drowsy_counts = []
+    notdrowsy_counts = []
+    
+    for dataset in datasets:
+        dataset_path = os.path.join(data_dir, dataset)
+        if not os.path.exists(dataset_path):
+            drowsy_counts.append(0)
+            notdrowsy_counts.append(0)
+            continue
+            
+        # Count files with _1 and _0 suffixes
+        drowsy_files = glob.glob(os.path.join(dataset_path, "*_1.*"))
+        notdrowsy_files = glob.glob(os.path.join(dataset_path, "*_0.*"))
+        
+        drowsy_counts.append(len(drowsy_files))
+        notdrowsy_counts.append(len(notdrowsy_files))
+    
+    # Create bar plot
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+    
+    # Bar plot
+    x = np.arange(len(datasets))
+    width = 0.35
+    
+    ax1.bar(x - width/2, drowsy_counts, width, label='Drowsy', color='red', alpha=0.7)
+    ax1.bar(x + width/2, notdrowsy_counts, width, label='Not Drowsy', color='blue', alpha=0.7)
+    
+    ax1.set_xlabel('Dataset')
+    ax1.set_ylabel('Number of Images')
+    ax1.set_title('Dataset Distribution: Drowsy vs Not Drowsy')
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(datasets)
+    ax1.legend()
+    ax1.grid(True, alpha=0.3)
+    
+    # Add value labels on bars
+    for i, (d, nd) in enumerate(zip(drowsy_counts, notdrowsy_counts)):
+        ax1.text(i - width/2, d + max(drowsy_counts + notdrowsy_counts) * 0.01, str(d), 
+                ha='center', va='bottom', fontweight='bold')
+        ax1.text(i + width/2, nd + max(drowsy_counts + notdrowsy_counts) * 0.01, str(nd), 
+                ha='center', va='bottom', fontweight='bold')
+    
+    # Pie chart for total distribution
+    total_drowsy = sum(drowsy_counts)
+    total_notdrowsy = sum(notdrowsy_counts)
+    
+    ax2.pie([total_drowsy, total_notdrowsy], 
+            labels=[f'Drowsy ({total_drowsy})', f'Not Drowsy ({total_notdrowsy})'],
+            autopct='%1.1f%%', startangle=90, colors=['red', 'blue'], alpha=0.7)
+    ax2.set_title('Total Dataset Distribution')
+    
+    plt.tight_layout()
+    
+    # Save plot if path provided
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        print(f"💾 Dataset distribution plot saved: {save_path}")
+    
+    plt.show()
+    
+    # Print summary
+    print("\n📊 Dataset Distribution Summary:")
+    print("=" * 40)
+    for i, dataset in enumerate(datasets):
+        total = drowsy_counts[i] + notdrowsy_counts[i]
+        if total > 0:
+            drowsy_pct = (drowsy_counts[i] / total) * 100
+            notdrowsy_pct = (notdrowsy_counts[i] / total) * 100
+            print(f"{dataset.capitalize():>8}: {drowsy_counts[i]:>4} drowsy ({drowsy_pct:>5.1f}%) | {notdrowsy_counts[i]:>4} not drowsy ({notdrowsy_pct:>5.1f}%) | Total: {total}")
+        else:
+            print(f"{dataset.capitalize():>8}: No data found")
+    
+    print(f"\nTotal Images: {total_drowsy + total_notdrowsy}")
+    print(f"Overall Drowsy Ratio: {(total_drowsy / (total_drowsy + total_notdrowsy)) * 100:.1f}%")
+
 def plot_history(history, save_path=None):
     """Plot training history: accuracy and loss"""
     plt.figure(figsize=(12, 5))

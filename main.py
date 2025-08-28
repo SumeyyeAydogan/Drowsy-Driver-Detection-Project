@@ -7,6 +7,7 @@ from src.train           import train_model
 from src.utils           import plot_history, plot_metrics, create_run_directories
 from src.evaluate        import evaluate_model
 from src.export          import save_model
+from src.utils           import plot_dataset_distribution
 
 if __name__ == "__main__":
     print("🚀 Starting Drowsy Driver Detection Project...")
@@ -42,13 +43,19 @@ if __name__ == "__main__":
     train_ds, val_ds, test_ds = get_data_pipelines(output_dir)
     print("✅ Datasets loaded successfully!")
 
+    # 5.1) Plot dataset distribution
+    print("📊 Analyzing dataset distribution...")
+    dist_plot_path = os.path.join(plots_dir, "dataset_distribution.png")
+    plot_dataset_distribution(output_dir, save_path=dist_plot_path)
+    print("✅ Dataset distribution analyzed and saved!")
+
     # 6) Build and train model
     print("🏗️  Building model...")
     model = build_model()
     print("✅ Model built successfully!")
     
     print("🎯 Starting training...")
-    history = train_model(model, train_ds, val_ds, epochs=2)
+    history = train_model(model, train_ds, val_ds, epochs=5)
     print("✅ Training completed!")
 
     # 7) Plot training graphs and save them
@@ -74,7 +81,7 @@ if __name__ == "__main__":
     # 10) Save simple config
     config = {
         "run_name": "run_001",
-        "epochs": 2,
+        "epochs": 5,
         "input_shape": (224, 224, 3),
         "model_type": "CNN",
         "classes": ["notdrowsy", "drowsy"]

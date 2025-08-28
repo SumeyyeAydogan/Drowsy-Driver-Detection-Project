@@ -18,15 +18,17 @@ def train_model(model, train_ds, val_ds, epochs=50):
           AUC(name='auc')
         ]
     )
-    '''
+    
     history = model.fit(
       train_ds,
       validation_data=val_ds,
       epochs=epochs,
       callbacks=callbacks
     )
+    
     '''
     train_small = train_ds.take(4)  # 4*16=64
     val_small = val_ds.take(4)
     history = model.fit(train_small, epochs=4, validation_data=val_small, class_weight=None)
+    '''
     return history
