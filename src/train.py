@@ -1,29 +1,28 @@
 import tensorflow as tf
-from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
 from tensorflow.keras.metrics import BinaryAccuracy, Precision, Recall, AUC
-
-callbacks = [
-  EarlyStopping(patience=5, restore_best_weights=True),
-  ReduceLROnPlateau(monitor='val_auc', factor=0.5, patience=3, min_lr=1e-6),
-  ModelCheckpoint('best_model.h5', save_best_only=True)
-]
-def train_model(model, train_ds, val_ds, epochs=50):
+def train_model(model, train_ds, val_ds, epochs=10, callbacks=None, initial_epoch=0):
+    """
+    Train the model with custom callbacks support
+    """
+    # Compile model
     model.compile(
-      optimizer=tf.keras.optimizers.Adam(1e-4),
-      loss='binary_crossentropy',
-      metrics=[
-          BinaryAccuracy(name='accuracy'),
-          Precision(name='precision'),
-          Recall(name='recall'),
-          AUC(name='auc')
-        ]
+        optimizer=tf.keras.optimizers.Adam(1e-4),
+        loss='binary_crossentropy',
+        metrics=['accuracy', Precision(name='precision'), Recall(name='recall'), AUC(name='auc')]
     )
     
+    # Prepare callbacks
+    if callbacks is None:
+        callbacks = []
+    
+    # Train model
     history = model.fit(
-      train_ds,
-      validation_data=val_ds,
-      epochs=epochs,
-      callbacks=callbacks
+        train_ds,
+        validation_data=val_ds,
+        epochs=epochs,
+        initial_epoch=initial_epoch,
+        callbacks=callbacks,
+        verbose=1
     )
     
     '''

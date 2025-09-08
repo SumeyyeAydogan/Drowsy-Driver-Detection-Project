@@ -45,8 +45,8 @@ def plot_dataset_distribution(data_dir="data", save_path=None):
     x = np.arange(len(datasets))
     width = 0.35
     
-    ax1.bar(x - width/2, drowsy_counts, width, label='Drowsy', color='red', alpha=0.7)
-    ax1.bar(x + width/2, notdrowsy_counts, width, label='Not Drowsy', color='blue', alpha=0.7)
+    ax1.bar(x - width/2, drowsy_counts, width, label='Drowsy', color='red')
+    ax1.bar(x + width/2, notdrowsy_counts, width, label='Not Drowsy', color='blue')
     
     ax1.set_xlabel('Dataset')
     ax1.set_ylabel('Number of Images')
@@ -54,7 +54,7 @@ def plot_dataset_distribution(data_dir="data", save_path=None):
     ax1.set_xticks(x)
     ax1.set_xticklabels(datasets)
     ax1.legend()
-    ax1.grid(True, alpha=0.3)
+    ax1.grid(True)
     
     # Add value labels on bars
     for i, (d, nd) in enumerate(zip(drowsy_counts, notdrowsy_counts)):
@@ -69,7 +69,7 @@ def plot_dataset_distribution(data_dir="data", save_path=None):
     
     ax2.pie([total_drowsy, total_notdrowsy], 
             labels=[f'Drowsy ({total_drowsy})', f'Not Drowsy ({total_notdrowsy})'],
-            autopct='%1.1f%%', startangle=90, colors=['red', 'blue'], alpha=0.7)
+            autopct='%1.1f%%', startangle=90, colors=['red', 'blue'])
     ax2.set_title('Total Dataset Distribution')
     
     plt.tight_layout()
@@ -109,7 +109,7 @@ def plot_history(history, save_path=None):
     plt.xlabel('Epoch')
     plt.ylabel('Accuracy')
     plt.legend()
-    plt.grid(True, alpha=0.3)
+    plt.grid(True)
 
     # Loss plot
     plt.subplot(1, 2, 2)
@@ -120,7 +120,7 @@ def plot_history(history, save_path=None):
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.legend()
-    plt.grid(True, alpha=0.3)
+    plt.grid(True)
     
     plt.tight_layout()
     
@@ -150,7 +150,7 @@ def plot_metrics(history, save_path=None):
         plt.xlabel('Epoch')
         plt.ylabel(metric.upper())
         plt.legend()
-        plt.grid(True, alpha=0.3)
+        plt.grid(True)
     
     plt.tight_layout()
     
@@ -194,7 +194,7 @@ def plot_roc_curve(y_true, y_pred_proba, save_path=None):
     plt.ylabel('True Positive Rate')
     plt.title('Receiver Operating Characteristic (ROC)')
     plt.legend(loc="lower right")
-    plt.grid(True, alpha=0.3)
+    plt.grid(True)
     
     # Save plot if path provided
     if save_path:
@@ -215,7 +215,7 @@ def plot_precision_recall_curve(y_true, y_pred_proba, save_path=None):
     plt.ylabel('Precision')
     plt.title('Precision-Recall Curve')
     plt.legend()
-    plt.grid(True, alpha=0.3)
+    plt.grid(True)
     
     # Save plot if path provided
     if save_path:

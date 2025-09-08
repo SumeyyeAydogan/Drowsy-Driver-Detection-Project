@@ -1,13 +1,15 @@
 import os
+from datetime import datetime
 
-#from src.split_data      import split_dataset
+from src.split_data      import split_dataset
 from src.dataloader      import get_data_pipelines
 from src.model           import build_model
 from src.train           import train_model
-from src.utils           import plot_history, plot_metrics, create_run_directories
-from src.evaluate        import evaluate_model
+from src.utils           import plot_history, plot_metrics, create_run_directories, plot_dataset_distribution
+from src.evaluate        import evaluate_model, evaluate_validation
 from src.export          import save_model
-from src.utils           import plot_dataset_distribution
+from src.run_manager     import RunManager
+from src.callbacks       import get_training_callbacks
 
 if __name__ == "__main__":
     print("🚀 Starting Drowsy Driver Detection Project...")
@@ -19,9 +21,9 @@ if __name__ == "__main__":
     #project_root = r"D:\internship\Drowsy-Driver-Detection-Project"
 
     # 1) Raw data folder (what you have)
-    #raw_dir = os.path.join(project_root, "train_data")
-    #if not os.path.isdir(raw_dir):
-    #    raise FileNotFoundError(f"`dataset_raw` not found: {raw_dir}")
+    raw_dir = os.path.join(project_root, "train_data")
+    if not os.path.exists(raw_dir):
+        raise FileNotFoundError(f"`train_data` not found: {raw_dir}")
 
     # 2) Folder where split data will go
     output_dir = os.path.join(project_root, "data")
@@ -29,14 +31,12 @@ if __name__ == "__main__":
 
     # 3) Create Train/Val/Test folder hierarchy
     #    raw_dir contains => drowsy, notdrowsy
-    #split_dataset(raw_dir, output_dir)
+    split_dataset(raw_dir, output_dir)
 
-    # 4) Create run directories
-    print("📁 Creating run directories...")
-    run_dir = create_run_directories("run_001")
-    models_dir = os.path.join(run_dir, "models")
-    plots_dir = os.path.join(run_dir, "plots")
-    print(f"✅ Run directories created: {run_dir}")
+    # 4) Create run manager
+    print("📁 Creating run manager...")
+    run_manager = RunManager("20_epoch")
+    print(f"✅ Run manager created: {run_manager.run_dir}")
 
     # 5) tf.data pipelines
     print("🔄 Loading datasets...")
@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
     # 5.1) Plot dataset distribution
     print("📊 Analyzing dataset distribution...")
-    dist_plot_path = os.path.join(plots_dir, "dataset_distribution.png")
+    dist_plot_path = os.path.join(run_manager.run_dir, "plots", "dataset_distribution.png")
     plot_dataset_distribution(output_dir, save_path=dist_plot_path)
     print("✅ Dataset distribution analyzed and saved!")
 
@@ -54,46 +54,85 @@ if __name__ == "__main__":
     model = build_model()
     print("✅ Model built successfully!")
     
+    # 6.1) Check for existing checkpoint and load if available
+    print("🔍 Checking for existing checkpoints...")
+    initial_epoch = run_manager.load_latest_checkpoint(model)
+    
+    if initial_epoch > 0:
+        print(f"🔄 Resuming training from epoch {initial_epoch + 1}")
+    else:
+        print("🆕 Starting training from scratch")
+    
+    # 7) Save initial config
+    config = {
+        "run_name": run_manager.run_name,
+        "epochs": 10,  # Increased for better demonstration
+        "input_shape": (224, 224, 3),
+        "model_type": "CNN",
+        "classes": ["notdrowsy", "drowsy"],
+        "batch_size": 32,
+        "learning_rate": 1e-4,
+        "started_at": str(datetime.now()),
+        "initial_epoch": initial_epoch
+    }
+    run_manager.save_config(config)
+    
+    # 8) Training with all callbacks
     print("🎯 Starting training...")
-    history = train_model(model, train_ds, val_ds, epochs=5)
+    
+    # Get all training callbacks (custom + standard Keras callbacks)
+    callbacks = get_training_callbacks(run_manager)
+    
+    # Train the model
+    history = train_model(
+        model, 
+        train_ds, 
+        val_ds, 
+        epochs=10,  # Increased epochs
+        callbacks=callbacks,  # Add all callbacks
+        initial_epoch=initial_epoch  # Resume from checkpoint if available
+    )
     print("✅ Training completed!")
 
-    # 7) Plot training graphs and save them
+    # 9) Plot training graphs and save them
     print("📊 Plotting training history...")
-    history_plot_path = os.path.join(plots_dir, "training_history.png")
+    history_plot_path = os.path.join(run_manager.run_dir, "plots", "training_history.png")
     plot_history(history, save_path=history_plot_path)
     
     print("📈 Plotting metrics...")
-    metrics_plot_path = os.path.join(plots_dir, "training_metrics.png")
+    metrics_plot_path = os.path.join(run_manager.run_dir, "plots", "training_metrics.png")
     plot_metrics(history, save_path=metrics_plot_path)
 
-    # 8) Evaluate on test set
-    print("🧪 Evaluating model on test set...")
-    evaluate_model(model, test_ds, plots_dir=plots_dir)
-    print("✅ Model evaluation completed!")
-
-    # 9) Save model to run directory
-    print("💾 Saving model...")
-    model_path = os.path.join(models_dir, "final_model.h5")
-    save_model(model, model_path)
-    print(f"✅ Model saved to: {model_path}")
+    # 10) Evaluate on validation set
+    print("🧪 Evaluating model on validation set...")
+    evaluate_validation(model, val_ds, plots_dir=os.path.join(run_manager.run_dir, "plots"))
+    print("✅ Validation evaluation completed!")
     
-    # 10) Save simple config
+    # 11) Evaluate on test set
+    print("🧪 Evaluating model on test set...")
+    evaluate_model(model, test_ds, plots_dir=os.path.join(run_manager.run_dir, "plots"))
+    print("✅ Test evaluation completed!")
+
+    # 11) Save final model
+    print("💾 Saving final model...")
+    run_manager.save_final_model(model)
+    
+    # 12) Save simple config
     config = {
         "run_name": "run_001",
-        "epochs": 5,
+        "epochs": 10,
         "input_shape": (224, 224, 3),
         "model_type": "CNN",
         "classes": ["notdrowsy", "drowsy"]
     }
     
     import json
-    config_path = os.path.join(run_dir, "config.json")
+    config_path = os.path.join(run_manager.run_dir, "config.json")
     with open(config_path, 'w') as f:
         json.dump(config, f, indent=2)
     print(f"✅ Config saved to: {config_path}")
     
     print("\n" + "=" * 50)
     print("🎉 All tasks completed successfully!")
-    print(f"📁 Results saved to: {run_dir}")
+    print(f"📁 Results saved to: {run_manager.run_dir}")
     print("Project finished! 🚀")
