@@ -98,18 +98,19 @@ def get_data_pipelines(base_dir,
         test_ds = test_ds.cache()
 
     # 5) Augment + normalize
-    rotation_factor = 0.3      # 0.1 = %10, 0.2 = %20, 0.3 = %30
-    zoom_factor = 0.3          # 0.1 = %10, 0.2 = %20, 0.3 = %30
-    brightness_delta = 0.3     # 0.1 = low, 0.2 = mid, 0.3 = strong
-    contrast_factor = 0.3      # 0.1 = low, 0.2 = mid, 0.3 = strong
-    
+    rotation_factor = 0.20
+    zoom_factor      = 0.20
+    brightness_delta = 0.08
+    contrast_factor  = 0.20
+
     data_augmentation = tf.keras.Sequential([
         tf.keras.layers.Rescaling(1./255),
         tf.keras.layers.RandomFlip("horizontal"),
         tf.keras.layers.RandomRotation(rotation_factor),
         tf.keras.layers.RandomZoom(zoom_factor),
-        #tf.keras.layers.RandomBrightness(brightness_delta),
-        #tf.keras.layers.RandomContrast(contrast_factor),
+        tf.keras.layers.RandomBrightness(brightness_delta,
+                                        value_range=(0.0, 1.0)),
+        tf.keras.layers.RandomContrast(contrast_factor)
     ])
     normalization = tf.keras.layers.Rescaling(1./255)
 

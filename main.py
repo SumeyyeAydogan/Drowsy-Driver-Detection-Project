@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 
-from src.split_data      import split_dataset
+from src.split_data      import split_data
 from src.dataloader      import get_data_pipelines
 from src.model           import build_model
 from src.train           import train_model
@@ -21,9 +21,9 @@ if __name__ == "__main__":
     #project_root = r"D:\internship\Drowsy-Driver-Detection-Project"
 
     # 1) Raw data folder (what you have)
-    raw_dir = os.path.join(project_root, "train_data")
-    if not os.path.exists(raw_dir):
-        raise FileNotFoundError(f"`train_data` not found: {raw_dir}")
+    #raw_dir = os.path.join(project_root, "train_data")
+    #if not os.path.exists(raw_dir):
+    #    raise FileNotFoundError(f"`train_data` not found: {raw_dir}")
 
     # 2) Folder where split data will go
     output_dir = os.path.join(project_root, "data")
@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
     # 3) Create Train/Val/Test folder hierarchy
     #    raw_dir contains => drowsy, notdrowsy
-    split_dataset(raw_dir, output_dir)
+    #split_dataset(raw_dir, output_dir)
 
     # 4) Create run manager
     print("📁 Creating run manager...")
