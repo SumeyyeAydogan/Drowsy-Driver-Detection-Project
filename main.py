@@ -5,7 +5,7 @@ from src.split_data      import split_dataset
 from src.dataloader      import get_data_pipelines
 from src.model           import build_model
 from src.train           import train_model
-from src.utils           import plot_history, plot_metrics, create_run_directories, plot_dataset_distribution
+from src.utils           import plot_history, plot_metrics, create_run_directories, plot_dataset_distribution, calculate_class_weights
 from src.evaluate        import evaluate_model, evaluate_validation
 from src.export          import save_model
 from src.run_manager     import RunManager
@@ -48,6 +48,11 @@ if __name__ == "__main__":
     dist_plot_path = os.path.join(run_manager.run_dir, "plots", "dataset_distribution.png")
     plot_dataset_distribution(output_dir, save_path=dist_plot_path)
     print("✅ Dataset distribution analyzed and saved!")
+    
+    # 5.2) Calculate class weights
+    print("⚖️  Calculating class weights...")
+    class_weights = calculate_class_weights(output_dir)
+    print("✅ Class weights calculated!")
 
     # 6) Build and train model
     print("🏗️  Building model...")
@@ -90,7 +95,8 @@ if __name__ == "__main__":
         val_ds, 
         epochs=10,  # Increased epochs
         callbacks=callbacks,  # Add all callbacks
-        initial_epoch=initial_epoch  # Resume from checkpoint if available
+        initial_epoch=initial_epoch,  # Resume from checkpoint if available
+        class_weights=class_weights  # Use calculated class weights
     )
     print("✅ Training completed!")
 

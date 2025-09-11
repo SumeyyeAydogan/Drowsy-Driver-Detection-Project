@@ -1,8 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import roc_curve, auc, precision_recall_curve, confusion_matrix
+from sklearn.utils.class_weight import compute_class_weight
 import seaborn as sns
 import os
+import glob
 
 def create_run_directories(run_name="run_001"):
     """Create basic run directory structure"""
@@ -223,3 +225,48 @@ def plot_precision_recall_curve(y_true, y_pred_proba, save_path=None):
         print(f"💾 Plot saved: {save_path}")
     
     plt.show()
+
+def calculate_class_weights(data_dir="data"):
+    """
+    Calculate class weights for imbalanced dataset
+    Returns a dictionary with class weights for binary classification
+    """
+    train_dir = os.path.join(data_dir, "train")
+    
+    if not os.path.exists(train_dir):
+        print(f"Warning: Training directory not found: {train_dir}")
+        return {0: 1.0, 1: 1.0}  # Return equal weights if no data
+    
+    # Count files with _0 and _1 suffixes
+    notdrowsy_files = glob.glob(os.path.join(train_dir, "*_0.*"))
+    drowsy_files = glob.glob(os.path.join(train_dir, "*_1.*"))
+    
+    notdrowsy_count = len(notdrowsy_files)
+    drowsy_count = len(drowsy_files)
+    
+    print(f"📊 Class distribution in training data:")
+    print(f"   Not Drowsy: {notdrowsy_count}")
+    print(f"   Drowsy: {drowsy_count}")
+    
+    if notdrowsy_count == 0 or drowsy_count == 0:
+        print("Warning: One class has no samples, using equal weights")
+        return {0: 1.0, 1: 1.0}
+    
+    # Calculate class weights using sklearn
+    classes = np.array([0, 1])  # 0 = notdrowsy, 1 = drowsy
+    y_labels = np.array([0] * notdrowsy_count + [1] * drowsy_count)
+    
+    class_weights = compute_class_weight(
+        'balanced',
+        classes=classes,
+        y=y_labels
+    )
+    
+    # Convert to dictionary format
+    class_weight_dict = {0: class_weights[0], 1: class_weights[1]}
+    
+    print(f"⚖️  Calculated class weights:")
+    print(f"   Not Drowsy (0): {class_weight_dict[0]:.3f}")
+    print(f"   Drowsy (1): {class_weight_dict[1]:.3f}")
+    
+    return class_weight_dict

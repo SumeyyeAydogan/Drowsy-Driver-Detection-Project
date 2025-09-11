@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras.metrics import BinaryAccuracy, Precision, Recall, AUC
-def train_model(model, train_ds, val_ds, epochs=10, callbacks=None, initial_epoch=0):
+def train_model(model, train_ds, val_ds, epochs=10, callbacks=None, initial_epoch=0, class_weights=None):
     """
     Train the model with custom callbacks support
     """
@@ -22,6 +22,7 @@ def train_model(model, train_ds, val_ds, epochs=10, callbacks=None, initial_epoc
         epochs=epochs,
         initial_epoch=initial_epoch,
         callbacks=callbacks,
+        class_weight=class_weights,
         verbose=1
     )
     
