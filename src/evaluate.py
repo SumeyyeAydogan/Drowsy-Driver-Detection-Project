@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.metrics import classification_report
 from src.utils import plot_confusion_matrix, plot_roc_curve, plot_precision_recall_curve
+from src.gradcam import analyze_model_gradcam
 import os
 
 def evaluate_model(model, test_ds, plots_dir=None, class_names=['Not Drowsy', 'Drowsy']):
@@ -46,7 +47,12 @@ def evaluate_model(model, test_ds, plots_dir=None, class_names=['Not Drowsy', 'D
     pr_save_path = os.path.join(plots_dir, "precision_recall_curve.png") if plots_dir else None
     plot_precision_recall_curve(y_true, y_pred_proba, save_path=pr_save_path)
     
-    # 6) Return metrics for further analysis
+    # 6) Generate GradCAM visualizations for explainability
+    print("Generating GradCAM visualizations...")
+    gradcam_dir = os.path.join(plots_dir, "gradcam") if plots_dir else "gradcam_results"
+    analyze_model_gradcam(model, test_ds, num_samples=10, output_dir=gradcam_dir)
+    
+    # 7) Return metrics for further analysis
     return {
         'y_true': y_true,
         'y_pred': y_pred,

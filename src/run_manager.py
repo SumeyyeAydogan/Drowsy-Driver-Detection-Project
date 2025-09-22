@@ -27,7 +27,7 @@ class RunManager:
     
     def save_checkpoint(self, model, epoch):
         """Save model checkpoint for specific epoch"""
-        checkpoint_path = os.path.join(self.run_dir, "checkpoints", f"epoch_{epoch:03d}.h5")
+        checkpoint_path = os.path.join(self.run_dir, "checkpoints", f"epoch_{epoch:03d}.weights.h5")
         model.save_weights(checkpoint_path)
         print(f"💾 Checkpoint saved: {checkpoint_path}")
         

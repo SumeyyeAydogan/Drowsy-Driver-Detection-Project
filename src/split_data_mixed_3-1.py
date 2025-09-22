@@ -6,7 +6,7 @@ from collections import defaultdict, Counter
 from typing import List, Tuple, Dict
 import numpy as np
 
-def split_data(
+def split_data_mixed_3-1(
     train_data_dir: str,
     output_dir: str = "data",
     val_ratio: float = 0.30,   # 30% for validation from remaining

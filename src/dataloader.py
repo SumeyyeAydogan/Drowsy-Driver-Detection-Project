@@ -36,7 +36,22 @@ def get_data_pipelines(base_dir,
     - _0: 0 (notdrowsy)
     """
 
-    # 1) Get file paths manually
+    # 1) Get file paths manually with corruption detection
+    def is_valid_image(file_path):
+        """Check if image file is valid and not corrupted"""
+        try:
+            import cv2
+            img = cv2.imread(file_path)
+            return img is not None
+        except:
+            try:
+                from PIL import Image
+                with Image.open(file_path) as img:
+                    img.verify()
+                return True
+            except:
+                return False
+
     def get_file_paths_and_labels(subdir):
         subdir_path = os.path.join(base_dir, subdir)
         if not os.path.exists(subdir_path):
@@ -44,15 +59,23 @@ def get_data_pipelines(base_dir,
         
         file_paths = []
         labels = []
+        corrupted_count = 0
         
         # Get all image files
         for ext in ['*.jpg', '*.jpeg', '*.png']:
             files = glob.glob(os.path.join(subdir_path, ext))
             for file_path in files:
-                filename = os.path.basename(file_path)
-                label = create_label_from_filename(filename)
-                file_paths.append(file_path)
-                labels.append(label)
+                if is_valid_image(file_path):
+                    filename = os.path.basename(file_path)
+                    label = create_label_from_filename(filename)
+                    file_paths.append(file_path)
+                    labels.append(label)
+                else:
+                    corrupted_count += 1
+                    print(f"Warning: Skipping corrupted image: {file_path}")
+        
+        if corrupted_count > 0:
+            print(f"Total corrupted images skipped in {subdir}: {corrupted_count}")
         
         return file_paths, labels
 
@@ -73,7 +96,10 @@ def get_data_pipelines(base_dir,
         def load_and_preprocess(file_path, label):
             # Load image
             image = tf.io.read_file(file_path)
-            image = tf.image.decode_jpeg(image, channels=3)
+            # Decode image with a known rank and channels
+            image = tf.image.decode_image(image, channels=3, expand_animations=False)
+            # Ensure static shape information for resize
+            image.set_shape([None, None, 3])
             image = tf.image.resize(image, img_size)
             return image, label
         
