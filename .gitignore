@@ -213,6 +213,7 @@ data/
 raw_data/
 dataset/
 train_data/
+mixed_data/
 
 # Run outputs (training results, models, plots)
 runs/

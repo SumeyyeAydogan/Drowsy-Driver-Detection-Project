@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 
-from src.split_data      import split_dataset
+from src.split_data_mixed      import split_data_mixed
 from src.dataloader      import get_data_pipelines
 from src.model           import build_model
 from src.train           import train_model
